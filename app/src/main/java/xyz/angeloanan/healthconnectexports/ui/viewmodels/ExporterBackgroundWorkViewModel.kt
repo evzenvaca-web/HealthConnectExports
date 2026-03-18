@@ -20,8 +20,8 @@ const val WORK_NAME_ONCE = "HealthConnectExporter"
 
 val dataExportRequest: PeriodicWorkRequest =
     PeriodicWorkRequestBuilder<DataExporterScheduleWorker>(
-        repeatInterval = 24, repeatIntervalTimeUnit = TimeUnit.HOURS,
-        flexTimeInterval = 12, flexTimeIntervalUnit = TimeUnit.HOURS
+        repeatInterval = 6, repeatIntervalTimeUnit = TimeUnit.HOURS,
+        flexTimeInterval = 1, flexTimeIntervalUnit = TimeUnit.HOURS
     )
         .setConstraints(
             Constraints.Builder()
