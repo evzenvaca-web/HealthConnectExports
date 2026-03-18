@@ -126,21 +126,23 @@ class DataExporterScheduleWorker(
         }
         Log.d("DataExporterWorker", "Raw data: ${Gson().toJson(healthDataAggregate)}")
 
-        val jsonValues = HashMap<String, Number>()
-        jsonValues["steps"] = healthDataAggregate[StepsRecord.COUNT_TOTAL] ?: 0
-        jsonValues["active_calories"] =
-            healthDataAggregate[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]?.inKilocalories
-                ?: 0
-        jsonValues["total_calories"] =
-            healthDataAggregate[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inKilocalories ?: 0
-        jsonValues["sleep_duration_seconds"] =
-            healthDataAggregate[SleepSessionRecord.SLEEP_DURATION_TOTAL]?.seconds ?: 0
-        val json = Gson().toJson(mapOf("time" to startOfDay.toEpochMilli(), "data" to jsonValues))
+        val steps = healthDataAggregate[StepsRecord.COUNT_TOTAL] ?: 0
+        val totalCalories = healthDataAggregate[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inKilocalories ?: 0
+        val sleepSeconds = healthDataAggregate[SleepSessionRecord.SLEEP_DURATION_TOTAL]?.seconds ?: 0
+        val sleepHours = sleepSeconds / 3600.0
+
+        // Vitalis API formát
+        val jsonValues = HashMap<String, Any>()
+        jsonValues["steps"] = steps
+        jsonValues["calories_burned"] = totalCalories.toInt()
+        jsonValues["sleep_hours"] = Math.round(sleepHours * 10.0) / 10.0
+        jsonValues["source"] = "samsung_health"
+        val json = Gson().toJson(jsonValues)
         Log.d("DataExporterWorker", "Data: $json")
 
         try {
             Log.d("DataExporterWorker", "Exporting data to $exportDestination")
-            httpClient.post("https://$exportDestination") {
+            httpClient.post("http://$exportDestination/api/activities") {
                 contentType(ContentType.Application.Json)
                 setBody(json)
             }
